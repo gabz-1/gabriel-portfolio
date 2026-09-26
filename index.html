@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabriel Nocito Rebello | Game Designer</title>
+    
+    <!-- Preload Videos for Instant Hover Playback -->
+    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4">
+    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4">
+    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4">
+    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">
+    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-base: #0f0400; 
+            --glow-1: #ff5e00;  
+            --glow-2: #ff0055;  
+            --text-accent: #ff8c42;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-base);
+            color: #ffffff;
+            overflow-x: hidden;
+            transition: background-color 1s ease;
+        }
+
+        /* Hide Scrollbar for cleaner look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: var(--text-accent); border-radius: 10px; }
+
+        .noise {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 9999; opacity: 0.04;
+            background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+        }
+
+        .content-layer { position: relative; z-index: 10; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+        }
+
+        /* --- DESKTOP (Mouse) SPECIFIC STYLES --- */
+        @media (pointer: fine) {
+            body { cursor: none; }
+            
+            #interactive-glow {
+                position: fixed; top: 0; left: 0;
+                width: 800px; height: 800px;
+                background: radial-gradient(circle, var(--glow-1) 0%, var(--glow-2) 40%, transparent 70%);
+                border-radius: 50%; pointer-events: none; z-index: 0;
+                filter: blur(80px); opacity: 0.6; mix-blend-mode: screen;
+                transform: translate(-50%, -50%); will-change: transform;
+            }
+
+            .custom-cursor {
+                position: fixed; width: 16px; height: 16px;
+                background: white; border-radius: 50%;
+                pointer-events: none; z-index: 10000;
+                mix-blend-mode: difference; transition: transform 0.2s ease;
+            }
+
+            #bubble-container {
+                position: fixed; top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                pointer-events: none; z-index: 50;
+            }
+            
+            .bubble-wrapper {
+                position: absolute; width: 380px; height: 380px;
+                opacity: 0; transform: scale(0); transform-origin: center;
+            }
+
+            .bubble-inner {
+                width: 100%; height: 100%; border-radius: 50%;
+                box-shadow: 0 0 60px var(--glow-1); border: 4px solid rgba(255, 255, 255, 0.8);
+                will-change: transform; overflow: hidden; position: relative; background-color: #000; 
+            }
+
+            .bubble-inner::after {
+                content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                border-radius: 50%; box-shadow: inset 0 0 40px rgba(0,0,0,0.9); pointer-events: none;
+            }
+
+            #b-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+            
+            .mobile-video { display: none; }
+        }
+
+        /* --- MOBILE (Touch) SPECIFIC STYLES --- */
+        @media (pointer: coarse) {
+            .custom-cursor, #interactive-glow, #bubble-container { display: none !important; }
+            .w-2\/3 { width: 100%; pr-12: 0; } /* Fix grid widths for mobile */
+            .mobile-video { display: block; border-radius: 12px; margin-top: 1rem; width: 100%; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        }
+
+        /* Smooth Accordion CSS Grid trick */
+        .project-row {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            outline: none;
+        }
+        
+        /* Accessibility: Highlight on Keyboard Focus */
+        .project-row:focus-visible .glass-panel {
+            box-shadow: 0 0 0 2px var(--text-accent);
+        }
+
+        .accordion-content {
+            display: grid; grid-template-rows: 0fr;
+            transition: grid-template-rows 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .accordion-inner { overflow: hidden; }
+
+        /* Trigger accordion on Hover OR Focus-Within */
+        .project-row:hover .accordion-content,
+        .project-row:focus-within .accordion-content {
+            grid-template-rows: 1fr;
+        }
+
+        .skill-pill { position: relative; transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); z-index: 1; }
+        .skill-desc {
+            position: absolute; bottom: -20px; left: 50%; transform: translate(-50%, 20px) scale(0.9);
+            width: 280px; padding: 1.2rem; background: rgba(0, 0, 0, 0.95);
+            border: 1px solid var(--glow-1); color: white; border-radius: 12px;
+            font-size: 0.85rem; font-weight: 300; opacity: 0; pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .skill-pill:hover, .skill-pill:focus-visible {
+            background: rgba(255,255,255,0.1); border-color: var(--glow-1); z-index: 50; outline: none;
+        }
+        .skill-pill:hover .skill-desc, .skill-pill:focus-visible .skill-desc {
+            opacity: 1; transform: translate(-50%, 100%) scale(1); bottom: -10px;
+        }
+
+        /* Respect OS reduced motion settings */
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition-duration: 0.01ms !important; }
+        }
+
+        section { min-height: 100vh; padding: 15vh 0; }
+    </style>
+</head>
+<body>
+
+    <div class="noise"></div>
+    <div id="interactive-glow"></div>
+    <div class="custom-cursor" id="cursor"></div>
+
+    <div id="bubble-container" aria-hidden="true">
+        <div class="bubble-wrapper" id="b-wrap">
+            <div class="bubble-inner" id="b-inner">
+                <video id="b-video" loop muted playsinline crossorigin="anonymous"></video>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full p-6 md:p-8 px-6 md:px-12 flex justify-between items-center z-50 content-layer mix-blend-difference">
+        <div class="font-bold tracking-tighter text-2xl">GNR.</div>
+        
+        <div class="flex gap-8 items-center">
+            <!-- Language Switcher -->
+            <div class="flex gap-2 text-sm font-bold tracking-widest text-gray-500">
+                <button onclick="changeLang('en')" id="btn-en" class="text-white transition-colors hover:text-[var(--text-accent)]">EN</button> /
+                <button onclick="changeLang('pt')" id="btn-pt" class="transition-colors hover:text-[var(--text-accent)]">PT</button> /
+                <button onclick="changeLang('it')" id="btn-it" class="transition-colors hover:text-[var(--text-accent)]">IT</button>
+            </div>
+            <a href="#contact" data-i18n="nav_contact" class="hidden md:block text-sm font-bold uppercase tracking-widest hover:text-[var(--text-accent)] transition-colors">Contact</a>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 md:px-8 content-layer" id="main-container">
+        
+        <!-- SECTION 1: HERO -->
+        <section id="hero" class="flex flex-col justify-center">
+            <h2 data-i18n="hero_role" class="font-bold mb-4 tracking-widest uppercase text-[var(--text-accent)]" style="transition: color 1s">Game Designer & Developer</h2>
+            <h1 class="text-[12vw] md:text-[9vw] font-extrabold leading-[0.8] tracking-tighter mb-8">
+                GABRIEL <br>REBELLO
+            </h1>
+            <p data-i18n="hero_desc" class="max-w-2xl text-lg md:text-xl leading-relaxed glass-panel p-6 md:p-8 text-gray-200">
+                A dependable, curious, and communicative Game Design graduate from Belas Artes. Motivated to learn and seeking collaborative roles that challenge my creativity, specializing in bridging systemic mechanics with psychological narrative.
+            </p>
+        </section>
+
+        <!-- SECTION 2: SELECTED WORKS -->
+        <section id="works" class="flex flex-col justify-center relative pt-20 md:pt-32">
+            <h3 class="text-4xl font-bold mb-12 flex items-center">
+                <span class="w-12 h-[2px] bg-[var(--text-accent)] mr-4" style="transition: background 1s"></span> 
+                <span data-i18n="works_title">Selected Works</span>
+            </h3>
+
+            <!-- Grid container. W-2/3 leaves space for bubble ONLY on desktop -->
+            <div class="w-full md:w-2/3 flex flex-col md:pr-12">
+                
+                <!-- Project: YPORU (Fully Accessible) -->
+                <div class="project-row py-8" tabindex="0" aria-expanded="false"
+                     onmouseenter="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4')" 
+                     onmouseleave="vacuumBubble(this)"
+                     onfocus="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'); this.setAttribute('aria-expanded', 'true')"
+                     onblur="vacuumBubble(this); this.setAttribute('aria-expanded', 'false')">
+                    
+                    <div class="flex items-start group relative md:pr-10">
+                        <div class="minus-icon hidden md:block text-5xl mr-8 font-light text-[var(--text-accent)] transition-transform duration-500 origin-center mt-[-10px]">-</div>
+                        <div class="w-full">
+                            <h4 class="text-3xl md:text-4xl font-bold transition-transform duration-500 group-hover:translate-x-2">Yporu</h4>
+                            <p data-i18n="p1_sub" class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Mythological Strategy & Management</p>
+                            
+                            <div class="accordion-content">
+                                <div class="accordion-inner">
+                                    <p data-i18n="p1_desc" class="text-gray-300 max-w-lg mt-6 mb-4 text-sm leading-relaxed">
+                                        A 2D strategy game blending tactical board-game combat with village-management mechanics, rooted in Brazilian Indigenous Tupinambá mythology.
+                                    </p>
+                                    <!-- Mobile Video Fallback -->
+                                    <video class="mobile-video" src="https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" muted loop playsinline controls></video>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project: TERROR IN ATARAXIA -->
+                <div class="project-row py-8" tabindex="0" aria-expanded="false"
+                     onmouseenter="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')" 
+                     onmouseleave="vacuumBubble(this)"
+                     onfocus="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'); this.setAttribute('aria-expanded', 'true')"
+                     onblur="vacuumBubble(this); this.setAttribute('aria-expanded', 'false')">
+                    
+                    <div class="flex items-start group relative md:pr-10">
+                        <div class="minus-icon hidden md:block text-5xl mr-8 font-light text-[var(--text-accent)] transition-transform duration-500 origin-center mt-[-10px]">-</div>
+                        <div class="w-full">
+                            <h4 class="text-3xl md:text-4xl font-bold transition-transform duration-500 group-hover:translate-x-2">Terror in Ataraxia</h4>
+                            <p data-i18n="p2_sub" class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Retro-Sci-Fi Stealth</p>
+                            
+                            <div class="accordion-content">
+                                <div class="accordion-inner">
+                                    <p data-i18n="p2_desc" class="text-gray-300 max-w-lg mt-6 mb-4 text-sm leading-relaxed">
+                                        A 3D stealth game that flips the script: You are the monster. Inspired by 1950s sci-fi cinema, featuring a striking black-and-white visual style.
+                                    </p>
+                                    <video class="mobile-video" src="https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" muted loop playsinline controls></video>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project: BENEATH US -->
+                <div class="project-row py-8" tabindex="0" aria-expanded="false"
+                     onmouseenter="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4')" 
+                     onmouseleave="vacuumBubble(this)"
+                     onfocus="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'); this.setAttribute('aria-expanded', 'true')"
+                     onblur="vacuumBubble(this); this.setAttribute('aria-expanded', 'false')">
+                    
+                    <div class="flex items-start group relative md:pr-10">
+                        <div class="minus-icon hidden md:block text-5xl mr-8 font-light text-[var(--text-accent)] transition-transform duration-500 origin-center mt-[-10px]">-</div>
+                        <div class="w-full">
+                            <h4 class="text-3xl md:text-4xl font-bold transition-transform duration-500 group-hover:translate-x-2">Beneath Us</h4>
+                            <p data-i18n="p3_sub" class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Multi-Screen Psychological Horror</p>
+                            
+                            <div class="accordion-content">
+                                <div class="accordion-inner">
+                                    <p data-i18n="p3_desc" class="text-gray-300 max-w-lg mt-6 mb-4 text-sm leading-relaxed">
+                                        Escape a subterranean laboratory in 1990s São Paulo using a dual-device setup, linking your real-world smartphone as an in-game artifact.
+                                    </p>
+                                    <video class="mobile-video" src="https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" muted loop playsinline controls></video>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 3: EXPERIENCE -->
+        <section id="experience" class="flex flex-col justify-center">
+            <h3 data-i18n="exp_title" class="text-4xl font-bold mb-12">Experience & Education</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-5xl">
+                
+                <div class="glass-panel p-8 md:p-10 hover:-translate-y-2 transition-transform duration-500">
+                    <h5 data-i18n="exp_1_role" class="text-xl md:text-2xl font-bold text-[var(--text-accent)]" style="transition: color 1s">Creative Technology Intern</h5>
+                    <p class="text-white font-bold text-lg md:text-xl mt-2">Colégio Visconde de Porto Seguro</p>
+                    <p data-i18n="exp_1_date" class="text-sm opacity-50 mb-6">Professional Experience</p>
+                    <p data-i18n="exp_1_desc" class="text-gray-300 mb-4 text-sm md:text-base">Spearheaded interactive learning initiatives by designing coding and game design projects using Minecraft and Scratch. Managed school-wide tech events and TEDx coordination.</p>
+                </div>
+
+                <div class="glass-panel p-8 md:p-10 hover:-translate-y-2 transition-transform duration-500">
+                    <h5 data-i18n="exp_2_role" class="text-xl md:text-2xl font-bold text-[var(--text-accent)]" style="transition: color 1s">Global Studies & Volunteering</h5>
+                    <p data-i18n="exp_2_loc" class="text-white font-bold text-lg md:text-xl mt-2">London / Rome / Germany</p>
+                    <p data-i18n="exp_2_date" class="text-sm opacity-50 mb-6">International Development</p>
+                    <p data-i18n="exp_2_desc" class="text-gray-300 mb-4 text-sm md:text-base">Broadened cultural and technical perspectives through intensive international coursework (Filmmaking, Marketing, Language) and volunteering, shaping a globally-minded approach.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: SKILLS & CONTACT -->
+        <section id="skills" class="flex flex-col justify-center min-h-[100vh]">
+            <h3 data-i18n="skills_title" class="text-4xl font-bold mb-12">Arsenal & Mastery</h3>
+            <div class="flex flex-wrap gap-4 md:gap-6 max-w-4xl mb-24 md:mb-32">
+                <div tabindex="0" class="skill-pill glass-panel px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg cursor-none border border-transparent">
+                    Unity & Unreal Engine
+                    <div data-i18n="skill_1" class="skill-desc">Hands-on experience developing both academic and personal projects utilizing these core engines.</div>
+                </div>
+                <div tabindex="0" class="skill-pill glass-panel px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg cursor-none border border-transparent">
+                    Level & Game Design
+                    <div data-i18n="skill_2" class="skill-desc">Specialized in 2D and 3D level design, gameplay-first prototyping, and rapid iteration.</div>
+                </div>
+                <div tabindex="0" class="skill-pill glass-panel px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg cursor-none border border-transparent">
+                    Video Editing
+                    <div data-i18n="skill_3" class="skill-desc">Highly skilled in DaVinci Resolve and Adobe Premiere Pro, backed by formal filmmaking studies in London.</div>
+                </div>
+            </div>
+
+            <!-- Contact / Footer Area -->
+            <div id="contact" class="border-t border-white/10 pt-16 grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div>
+                    <h4 data-i18n="contact_title" class="font-bold text-2xl mb-4 text-[var(--text-accent)]">Contact</h4>
+                    <!-- Functional Mailto link -->
+                    <a href="mailto:gabrielnocrebello@gmail.com" class="block text-gray-400 hover:text-white transition-colors">gabrielnocrebello@gmail.com ↗</a>
+                    <p class="text-gray-400 mt-2">(+55) 11 959001806</p>
+                    <a href="https://www.linkedin.com/in/gabriel-nocito-rebello" target="_blank" class="block mt-6 font-bold text-white hover:text-[var(--glow-1)] transition-colors">LinkedIn Profile ↗</a>
+                </div>
+                <div>
+                    <h4 data-i18n="edu_title" class="font-bold text-2xl mb-4 text-[var(--text-accent)]">Education & Setup</h4>
+                    <p data-i18n="edu_1" class="text-gray-400">Game Design (2022-2026)</p>
+                    <p class="text-gray-400">University of Belas Artes</p>
+                    <p data-i18n="edu_visa" class="text-white mt-6 font-bold">Work Authorization:</p>
+                    <p data-i18n="edu_pass" class="text-gray-400">Italian Passport (Global Visas Highly Feasible)</p>
+                </div>
+                <div>
+                    <h4 data-i18n="lang_title" class="font-bold text-2xl mb-4 text-[var(--text-accent)]">Languages</h4>
+                    <ul class="text-gray-400 space-y-2">
+                        <li><span data-i18n="lang_pt" class="text-white">Portuguese:</span> Native</li>
+                        <li><span data-i18n="lang_en" class="text-white">English:</span> Advanced</li>
+                        <li><span data-i18n="lang_it" class="text-white">Italian:</span> Intermediate</li>
+                        <li><span data-i18n="lang_de" class="text-white">German:</span> Beginner</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- 1. TRANSLATION ENGINE ---
+        const i18n = {
+            en: {
+                nav_contact: "Contact", hero_role: "Game Designer & Developer",
+                hero_desc: "A dependable, curious, and communicative Game Design graduate from Belas Artes. Motivated to learn and seeking collaborative roles that challenge my creativity, specializing in bridging systemic mechanics with psychological narrative.",
+                works_title: "Selected Works", p1_sub: "Mythological Strategy & Management",
+                p1_desc: "A 2D strategy game blending tactical board-game combat with village-management mechanics, rooted in Brazilian Indigenous Tupinambá mythology.",
+                p2_sub: "Retro-Sci-Fi Stealth", p2_desc: "A 3D stealth game that flips the script: You are the monster. Inspired by 1950s sci-fi cinema, featuring a striking black-and-white visual style.",
+                p3_sub: "Multi-Screen Psychological Horror", p3_desc: "Escape a subterranean laboratory in 1990s São Paulo using a dual-device setup, linking your real-world smartphone as an in-game artifact.",
+                exp_title: "Experience & Education", exp_1_role: "Creative Technology Intern", exp_1_date: "Professional Experience",
+                exp_1_desc: "Spearheaded interactive learning initiatives by designing coding and game design projects using Minecraft and Scratch. Managed school-wide tech events and TEDx coordination.",
+                exp_2_role: "Global Studies & Volunteering", exp_2_loc: "London / Rome / Germany", exp_2_date: "International Development",
+                exp_2_desc: "Broadened cultural and technical perspectives through intensive international coursework (Filmmaking, Marketing, Language) and volunteering, shaping a globally-minded approach.",
+                skills_title: "Arsenal & Mastery", skill_1: "Hands-on experience developing both academic and personal projects utilizing these core engines.",
+                skill_2: "Specialized in 2D and 3D level design, gameplay-first prototyping, and rapid iteration.", skill_3: "Highly skilled in DaVinci Resolve and Adobe Premiere Pro, backed by formal filmmaking studies in London.",
+                contact_title: "Contact", edu_title: "Education & Setup", edu_1: "Game Design (2022-2026)", edu_visa: "Work Authorization:", edu_pass: "Italian Passport (Global Visas Highly Feasible)",
+                lang_title: "Languages", lang_pt: "Portuguese:", lang_en: "English:", lang_it: "Italian:", lang_de: "German:"
+            },
+            pt: {
+                nav_contact: "Contato", hero_role: "Game Designer & Desenvolvedor",
+                hero_desc: "Recém-formado em Game Design pela Belas Artes, sou confiável, curioso e comunicativo. Motivado a aprender e em busca de papéis colaborativos que desafiem minha criatividade, conectando mecânicas sistêmicas com narrativas psicológicas.",
+                works_title: "Projetos Selecionados", p1_sub: "Estratégia Mitológica & Gestão",
+                p1_desc: "Um jogo de estratégia 2D que mistura combate tático em tabuleiro com gestão de aldeia, enraizado na mitologia indígena brasileira Tupinambá.",
+                p2_sub: "Stealth Retro-Ficção Científica", p2_desc: "Um jogo stealth 3D que inverte a narrativa: Você é o monstro. Inspirado no cinema sci-fi dos anos 50, com um estilo visual preto e branco marcante.",
+                p3_sub: "Terror Psicológico Multi-Tela", p3_desc: "Fuja de um laboratório subterrâneo em São Paulo dos anos 90 usando uma configuração de dois dispositivos, conectando seu smartphone como um artefato no jogo.",
+                exp_title: "Experiência e Formação", exp_1_role: "Estagiário de Tecnologia Criativa", exp_1_date: "Experiência Profissional",
+                exp_1_desc: "Liderou iniciativas de aprendizado interativo projetando atividades de programação usando Minecraft e Scratch. Gerenciou eventos de tecnologia e a coordenação do TEDx.",
+                exp_2_role: "Estudos Globais e Voluntariado", exp_2_loc: "Londres / Roma / Alemanha", exp_2_date: "Desenvolvimento Internacional",
+                exp_2_desc: "Ampliação de perspectivas culturais e técnicas através de cursos internacionais intensivos (Cinema, Marketing, Idioma) e voluntariado.",
+                skills_title: "Arsenal & Domínio", skill_1: "Experiência prática no desenvolvimento de projetos acadêmicos e pessoais usando essas engines.",
+                skill_2: "Especializado em level design 2D e 3D, prototipagem focada em gameplay e iteração rápida.", skill_3: "Altamente qualificado em DaVinci Resolve e Premiere Pro, apoiado por estudos de cinema em Londres.",
+                contact_title: "Contato", edu_title: "Educação & Vistos", edu_1: "Game Design (2022-2026)", edu_visa: "Autorização de Trabalho:", edu_pass: "Passaporte Italiano (Visto global facilitado)",
+                lang_title: "Idiomas", lang_pt: "Português:", lang_en: "Inglês:", lang_it: "Italiano:", lang_de: "Alemão:"
+            },
+            it: {
+                nav_contact: "Contatto", hero_role: "Game Designer & Sviluppatore",
+                hero_desc: "Neolaureato in Game Design alla Belas Artes, affidabile, curioso e comunicativo. Motivato a imparare e alla ricerca di ruoli collaborativi, specializzato nel collegare meccaniche di sistema con narrativa psicologica.",
+                works_title: "Opere Selezionate", p1_sub: "Strategia Mitologica e Gestione",
+                p1_desc: "Un gioco di strategia 2D che fonde combattimento tattico con la gestione del villaggio, radicato nella mitologia indigena brasiliana Tupinambá.",
+                p2_sub: "Stealth Retro-Fantascienza", p2_desc: "Un gioco stealth 3D che capovolge la storia: Tu sei il mostro. Ispirato al cinema sci-fi degli anni '50, con un sorprendente stile visivo in bianco e nero.",
+                p3_sub: "Horror Psicologico Multi-Schermo", p3_desc: "Fuggi da un laboratorio sotterraneo nella San Paolo degli anni '90 usando un sistema a doppio dispositivo, collegando il tuo smartphone come artefatto.",
+                exp_title: "Esperienza & Istruzione", exp_1_role: "Stagista in Tecnologia Creativa", exp_1_date: "Esperienza Professionale",
+                exp_1_desc: "Ha guidato iniziative di apprendimento interattivo progettando lezioni di programmazione tramite Minecraft e Scratch. Ha gestito eventi tecnologici e coordinamento TEDx.",
+                exp_2_role: "Studi Globali e Volontariato", exp_2_loc: "Londra / Roma / Germania", exp_2_date: "Sviluppo Internazionale",
+                exp_2_desc: "Ampliamento delle prospettive culturali e tecniche attraverso corsi internazionali intensivi (Cinema, Marketing, Lingua) e volontariato.",
+                skills_title: "Arsenale e Padronanza", skill_1: "Esperienza pratica nello sviluppo di progetti accademici e personali utilizzando questi motori.",
+                skill_2: "Specializzato in level design 2D e 3D, prototipazione basata sul gameplay e iterazione rapida.", skill_3: "Altamente qualificato in DaVinci Resolve e Premiere Pro, supportato da studi di cinema a Londra.",
+                contact_title: "Contatto", edu_title: "Istruzione e Visti", edu_1: "Game Design (2022-2026)", edu_visa: "Autorizzazione al Lavoro:", edu_pass: "Passaporto Italiano (Visto globale facilitato)",
+                lang_title: "Lingue", lang_pt: "Portoghese:", lang_en: "Inglese:", lang_it: "Italiano:", lang_de: "Tedesco:"
+            }
+        };
+
+        function changeLang(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(i18n[lang][key]) el.innerText = i18n[lang][key];
+            });
+            // Update UI styles for active language
+            ['en', 'pt', 'it'].forEach(l => {
+                const btn = document.getElementById(`btn-${l}`);
+                if(l === lang) {
+                    btn.classList.add('text-white');
+                    btn.classList.remove('text-gray-500');
+                } else {
+                    btn.classList.add('text-gray-500');
+                    btn.classList.remove('text-white');
+                }
+            });
+        }
+
+        // --- 2. GSAP SCROLL & GLOW ENGINE ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        const cursor = document.getElementById('cursor');
+        const glow = document.getElementById('interactive-glow');
+        const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+        
+        let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+        let glowX = mouseX, glowY = mouseY;
+        let reqAnimFrame;
+
+        if(!isTouchDevice) {
+            window.addEventListener('mousemove', e => {
+                mouseX = e.clientX; mouseY = e.clientY;
+                gsap.to(cursor, { x: mouseX, y: mouseY, duration: 0.1 });
+            });
+
+            function animateGlow() {
+                glowX += (mouseX - glowX) * 0.04;
+                glowY += (mouseY - glowY) * 0.04;
+                glow.style.left = `${glowX}px`; glow.style.top = `${glowY}px`;
+                reqAnimFrame = requestAnimationFrame(animateGlow);
+            }
+            animateGlow();
+        }
+
+        const journeySteps = [
+            { id: '#hero', base: '#120400', glow1: '#ff5e00', glow2: '#ff0055', text: '#ff8c42' },
+            { id: '#works', base: '#030014', glow1: '#4f00ff', glow2: '#00d4ff', text: '#00d4ff' },
+            { id: '#experience', base: '#010008', glow1: '#2a00ff', glow2: '#8000ff', text: '#b580ff' },
+            { id: '#skills', base: '#000000', glow1: '#00ffaa', glow2: '#0055ff', text: '#00ffaa' }
+        ];
+
+        journeySteps.forEach((step) => {
+            ScrollTrigger.create({
+                trigger: step.id,
+                start: "top 50%", end: "bottom 50%",
+                onEnter: () => updateColors(step),
+                onEnterBack: () => updateColors(step)
+            });
+        });
+
+        function updateColors(step) {
+            gsap.to(document.documentElement, {
+                '--bg-base': step.base, '--glow-1': step.glow1, '--glow-2': step.glow2, '--text-accent': step.text,
+                duration: 1.5, ease: "power2.out"
+            });
+        }
+
+        // --- 3. PHYSICS BUBBLE ENGINE (A11Y & ULTRA-WIDE SAFE) ---
+        const bWrap = document.getElementById('b-wrap');
+        const bInner = document.getElementById('b-inner');
+        const bVideo = document.getElementById('b-video');
+        const mainContainer = document.getElementById('main-container');
+        let floatTween;
+
+        function ejectBubble(el, videoUrl) {
+            if(isTouchDevice) return; // Prevent heavy JS logic on mobile entirely
+
+            const minusIcon = el.querySelector('.minus-icon');
+            const rect = minusIcon.getBoundingClientRect();
+            
+            if (bVideo.src !== videoUrl) {
+                bVideo.src = videoUrl;
+                bVideo.load(); 
+            }
+            
+            const playPromise = bVideo.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => console.warn("Auto-play prevented", error));
+            }
+            
+            gsap.to(minusIcon, { rotation: 90, color: '#ffffff', duration: 0.5, ease: "back.out(2)" });
+            
+            // Ultra-wide monitor fix: Get bounds of the <main> container to anchor the bubble
+            const mainRect = mainContainer.getBoundingClientRect();
+            // Target right side of the main container, preventing it from flying into off-screen void
+            const targetX = Math.min(mainRect.right - 250, window.innerWidth - 300);
+            const targetY = el.getBoundingClientRect().top + (el.getBoundingClientRect().height / 2) - 190;
+
+            gsap.killTweensOf(bWrap);
+            if (floatTween) floatTween.kill();
+
+            gsap.set(bWrap, { x: rect.left, y: rect.top, scale: 0.1, opacity: 0 });
+
+            gsap.to(bWrap, {
+                x: targetX, y: targetY, scale: 1, opacity: 1,
+                duration: 0.8, ease: "back.out(1.4)"
+            });
+
+            gsap.set(bInner, { y: 0 });
+            floatTween = gsap.to(bInner, {
+                y: -25, rotation: 3, duration: 2.5, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.2
+            });
+        }
+
+        function vacuumBubble(el) {
+            if(isTouchDevice) return;
+            const minusIcon = el.querySelector('.minus-icon');
+            const rect = minusIcon.getBoundingClientRect();
+            
+            gsap.to(minusIcon, { rotation: 0, color: 'var(--text-accent)', duration: 0.4 });
+
+            if (floatTween) floatTween.kill();
+            gsap.to(bInner, { y: 0, rotation: 0, duration: 0.4 });
+
+            gsap.to(bWrap, {
+                x: rect.left, y: rect.top, scale: 0, opacity: 0,
+                duration: 0.5, ease: "power4.in" 
+            });
+            setTimeout(() => { if (bWrap.style.opacity == 0) bVideo.pause(); }, 500);
+        }
+
+        ScrollTrigger.create({
+            trigger: "#works",
+            start: "top bottom", end: "bottom top",
+            onLeave: forceHideBubble, onLeaveBack: forceHideBubble
+        });
+
+        function forceHideBubble() {
+            if(isTouchDevice) return;
+            gsap.killTweensOf(bWrap);
+            if (floatTween) floatTween.kill();
+            gsap.to(bWrap, { scale: 0, opacity: 0, duration: 0.3 });
+            bVideo.pause();
+            gsap.to('.minus-icon', { rotation: 0, color: 'var(--text-accent)', duration: 0.3 });
+        }
+
+        if(!isTouchDevice) {
+            document.querySelectorAll('a, button, .project-row, .skill-pill').forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    gsap.to(cursor, { scale: 3, background: 'transparent', border: '1px solid white', duration: 0.3 });
+                });
+                item.addEventListener('mouseleave', () => {
+                    gsap.to(cursor, { scale: 1, background: 'white', border: 'none', duration: 0.3 });
+                });
+            });
+        }
+    </script>
+</body>
+</html>
