@@ -5,17 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gabriel Nocito Rebello | Game Designer</title>
     
-    <!-- Preload Videos for Instant Hover Playback -->
-    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4">
-    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4">
-    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4">
-    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">
-    <link rel="preload" as="video" href="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">
+    <!-- Preconnect instead of broken/heavy <link rel="preload" as="video"> -->
+    <link rel="preconnect" href="https://storage.googleapis.com">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -33,7 +29,7 @@
             transition: background-color 1s ease;
         }
 
-        /* Hide Scrollbar for cleaner look */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-base); }
         ::-webkit-scrollbar-thumb { background: var(--text-accent); border-radius: 10px; }
@@ -54,106 +50,237 @@
             border-radius: 24px;
         }
 
-        /* --- DESKTOP (Mouse) SPECIFIC STYLES --- */
+        /* --- DESKTOP (Mouse + Wide Screen) SPECIFIC STYLES --- */
         @media (pointer: fine) {
-            body { cursor: none; }
-            
-            #interactive-glow {
-                position: fixed; top: 0; left: 0;
-                width: 800px; height: 800px;
-                background: radial-gradient(circle, var(--glow-1) 0%, var(--glow-2) 40%, transparent 70%);
-                border-radius: 50%; pointer-events: none; z-index: 0;
-                filter: blur(80px); opacity: 0.6; mix-blend-mode: screen;
-                transform: translate(-50%, -50%); will-change: transform;
-            }
-
-            .custom-cursor {
-                position: fixed; width: 16px; height: 16px;
-                background: white; border-radius: 50%;
-                pointer-events: none; z-index: 10000;
-                mix-blend-mode: difference; transition: transform 0.2s ease;
-            }
-
-            #bubble-container {
-                position: fixed; top: 0; left: 0;
-                width: 100vw; height: 100vh;
-                pointer-events: none; z-index: 50;
-            }
-            
-            .bubble-wrapper {
-                position: absolute; width: 380px; height: 380px;
-                opacity: 0; transform: scale(0); transform-origin: center;
-            }
-
-            .bubble-inner {
-                width: 100%; height: 100%; border-radius: 50%;
-                box-shadow: 0 0 60px var(--glow-1); border: 4px solid rgba(255, 255, 255, 0.8);
-                will-change: transform; overflow: hidden; position: relative; background-color: #000; 
-            }
-
-            .bubble-inner::after {
-                content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                border-radius: 50%; box-shadow: inset 0 0 40px rgba(0,0,0,0.9); pointer-events: none;
-            }
-
-            #b-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-            
-            .mobile-video { display: none; }
+            body:not(.force-mobile-ux) { cursor: none; }
+            body:not(.force-mobile-ux) a,
+            body:not(.force-mobile-ux) button,
+            body:not(.force-mobile-ux) .project-row,
+            body:not(.force-mobile-ux) .skill-pill { cursor: none; }
         }
 
-        /* --- MOBILE (Touch) SPECIFIC STYLES --- */
-        @media (pointer: coarse) {
-            .custom-cursor, #interactive-glow, #bubble-container { display: none !important; }
-            .w-2\/3 { width: 100%; pr-12: 0; } /* Fix grid widths for mobile */
-            .mobile-video { display: block; border-radius: 12px; margin-top: 1rem; width: 100%; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        #interactive-glow {
+            position: fixed; top: 50%; left: 50%;
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, var(--glow-1) 0%, var(--glow-2) 40%, transparent 70%);
+            border-radius: 50%; pointer-events: none; z-index: 0;
+            filter: blur(80px); opacity: 0.55; mix-blend-mode: screen;
+            transform: translate(-50%, -50%); will-change: transform;
+        }
+
+        .custom-cursor {
+            position: fixed; top: 0; left: 0; width: 16px; height: 16px;
+            background: white; border-radius: 50%;
+            pointer-events: none; z-index: 10000;
+            mix-blend-mode: difference;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Desktop Side-Floating Bubble */
+        #bubble-container {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 50;
+        }
+        
+        .bubble-wrapper {
+            position: absolute; width: 360px; height: 360px;
+            opacity: 0; transform: scale(0); transform-origin: center;
+        }
+
+        .bubble-inner {
+            width: 100%; height: 100%; border-radius: 50%;
+            box-shadow: 0 0 60px var(--glow-1); border: 3px solid rgba(255, 255, 255, 0.85);
+            will-change: transform; overflow: hidden; position: relative; background-color: #09090f; 
+            transition: box-shadow 0.6s ease;
+        }
+
+        .bubble-inner::after {
+            content: ""; position: absolute; inset: 0;
+            border-radius: 50%; box-shadow: inset 0 0 40px rgba(0,0,0,0.85); pointer-events: none;
+        }
+
+        #b-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
+        /* --- MOBILE UNDER-TEXT BUBBLE POP STYLES --- */
+        .mobile-bubble-stage {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 1.25rem 0 0.75rem;
+            perspective: 800px;
+        }
+
+        .mobile-bubble-wrap {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            transform: scale(0);
+            opacity: 0;
+            transform-origin: top center;
+            will-change: transform, opacity;
+            transition: width 0.45s cubic-bezier(0.23, 1, 0.32, 1), height 0.45s cubic-bezier(0.23, 1, 0.32, 1), border-radius 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        /* Optional expanded widescreen state when user taps expand on mobile bubble */
+        .mobile-bubble-wrap.is-expanded {
+            width: 100%;
+            max-width: 420px;
+            height: 220px;
+        }
+
+        .mobile-bubble-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            background: radial-gradient(circle at center, #1f1635 0%, #05050a 100%);
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 12px 45px var(--glow-1), inset 0 0 25px rgba(0, 0, 0, 0.8);
+            transition: border-radius 0.45s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s ease;
+        }
+
+        .mobile-bubble-wrap.is-expanded .mobile-bubble-inner {
+            border-radius: 20px;
+        }
+
+        .mobile-bubble-inner video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .mobile-bubble-inner::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.75);
+            pointer-events: none;
+        }
+
+        /* Show mobile bubble under text on touch devices, narrow screens, or when preview mode is forced */
+        @media (pointer: coarse), (max-width: 767px) {
+            .custom-cursor, #bubble-container { display: none !important; }
+            #interactive-glow { width: 420px; height: 420px; opacity: 0.35; }
+            .mobile-bubble-stage { display: flex; }
+        }
+
+        body.force-mobile-ux .custom-cursor,
+        body.force-mobile-ux #bubble-container {
+            display: none !important;
+        }
+        body.force-mobile-ux .mobile-bubble-stage {
+            display: flex !important;
+        }
+        body.force-mobile-ux #works-list {
+            width: 100% !important;
+            padding-right: 0 !important;
         }
 
         /* Smooth Accordion CSS Grid trick */
         .project-row {
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
             outline: none;
+            cursor: pointer;
         }
         
-        /* Accessibility: Highlight on Keyboard Focus */
-        .project-row:focus-visible .glass-panel {
+        .project-row:focus-visible {
             box-shadow: 0 0 0 2px var(--text-accent);
+            border-radius: 12px;
         }
 
         .accordion-content {
-            display: grid; grid-template-rows: 0fr;
+            display: grid;
+            grid-template-rows: 0fr;
             transition: grid-template-rows 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
         
         .accordion-inner { overflow: hidden; }
 
-        /* Trigger accordion on Hover OR Focus-Within */
-        .project-row:hover .accordion-content,
-        .project-row:focus-within .accordion-content {
+        /* Expand on desktop hover/focus OR when .is-open class is active (for mobile tap & preview) */
+        @media (hover: hover) and (min-width: 768px) {
+            body:not(.force-mobile-ux) .project-row:hover .accordion-content,
+            body:not(.force-mobile-ux) .project-row:focus-within .accordion-content {
+                grid-template-rows: 1fr;
+            }
+        }
+
+        .project-row.is-open .accordion-content {
             grid-template-rows: 1fr;
         }
 
-        .skill-pill { position: relative; transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); z-index: 1; }
+        /* Skill Pills - Responsive & Accessible */
+        .skill-pill {
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 1;
+            cursor: pointer;
+        }
         .skill-desc {
-            position: absolute; bottom: -20px; left: 50%; transform: translate(-50%, 20px) scale(0.9);
-            width: 280px; padding: 1.2rem; background: rgba(0, 0, 0, 0.95);
-            border: 1px solid var(--glow-1); color: white; border-radius: 12px;
-            font-size: 0.85rem; font-weight: 300; opacity: 0; pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: absolute;
+            bottom: -16px;
+            left: 50%;
+            transform: translate(-50%, 20px) scale(0.92);
+            width: min(280px, 82vw);
+            padding: 1.1rem;
+            background: rgba(8, 8, 14, 0.96);
+            border: 1px solid var(--glow-1);
+            color: white;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            font-weight: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.85);
         }
 
-        .skill-pill:hover, .skill-pill:focus-visible {
-            background: rgba(255,255,255,0.1); border-color: var(--glow-1); z-index: 50; outline: none;
+        .skill-pill:hover,
+        .skill-pill:focus-visible,
+        .skill-pill.is-active {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--glow-1);
+            z-index: 50;
+            outline: none;
         }
-        .skill-pill:hover .skill-desc, .skill-pill:focus-visible .skill-desc {
-            opacity: 1; transform: translate(-50%, 100%) scale(1); bottom: -10px;
+        .skill-pill:hover .skill-desc,
+        .skill-pill:focus-visible .skill-desc,
+        .skill-pill.is-active .skill-desc {
+            opacity: 1;
+            transform: translate(-50%, 100%) scale(1);
+            bottom: -10px;
         }
 
-        /* Respect OS reduced motion settings */
+        /* Loading indicator inside video bubbles */
+        .video-loader {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, rgba(25,20,40,0.85) 0%, rgba(5,5,10,0.95) 100%);
+            z-index: 2;
+            transition: opacity 0.35s ease;
+            pointer-events: none;
+        }
+        .video-loader.is-hidden {
+            opacity: 0;
+        }
+
+        /* Fixed syntax error: universal selector * instead of - */
         @media (prefers-reduced-motion: reduce) {
-            * { animation: none !important; transition-duration: 0.01ms !important; }
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
         }
 
-        section { min-height: 100vh; padding: 15vh 0; }
+        section { min-height: 100vh; padding: 14vh 0; }
     </style>
 </head>
 <body>
@@ -162,122 +289,199 @@
     <div id="interactive-glow"></div>
     <div class="custom-cursor" id="cursor"></div>
 
+    <!-- Desktop Side-Floating Video Bubble -->
     <div id="bubble-container" aria-hidden="true">
         <div class="bubble-wrapper" id="b-wrap">
             <div class="bubble-inner" id="b-inner">
-                <video id="b-video" loop muted playsinline crossorigin="anonymous"></video>
+                <div class="video-loader" id="desktop-video-loader">
+                    <div class="w-8 h-8 border-2 border-white/30 border-t-[var(--text-accent)] rounded-full animate-spin"></div>
+                </div>
+                <!-- Removed crossorigin="anonymous" so external MP4s load without CORS block -->
+                <video id="b-video" loop muted playsinline preload="metadata"></video>
             </div>
         </div>
     </div>
 
     <!-- Navigation -->
-    <nav class="fixed top-0 w-full p-6 md:p-8 px-6 md:px-12 flex justify-between items-center z-50 content-layer mix-blend-difference">
-        <div class="font-bold tracking-tighter text-2xl">GNR.</div>
+    <nav class="fixed top-0 w-full p-4 md:p-7 px-5 md:px-12 flex justify-between items-center z-50 content-layer backdrop-blur-md bg-black/20 border-b border-white/5">
+        <a href="#hero" class="font-extrabold tracking-tighter text-2xl hover:text-[var(--text-accent)] transition-colors">GNR.</a>
         
-        <div class="flex gap-8 items-center">
+        <div class="flex gap-4 md:gap-8 items-center">
+            <!-- Interactive UX Mode Switcher so user can test Mobile Under-Text Bubble vs PC Side Bubble anytime -->
+            <button id="ux-mode-btn" type="button" onclick="toggleUxMode()" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-white/20 bg-white/5 hover:border-[var(--text-accent)] hover:bg-white/10 transition-all flex items-center gap-2" title="Switch between Auto, Mobile Under-Text Bubble, and PC Side Bubble">
+                <span class="w-2 h-2 rounded-full bg-[var(--text-accent)] animate-pulse"></span>
+                <span id="ux-mode-label">UX: Auto</span>
+            </button>
+
             <!-- Language Switcher -->
-            <div class="flex gap-2 text-sm font-bold tracking-widest text-gray-500">
-                <button onclick="changeLang('en')" id="btn-en" class="text-white transition-colors hover:text-[var(--text-accent)]">EN</button> /
-                <button onclick="changeLang('pt')" id="btn-pt" class="transition-colors hover:text-[var(--text-accent)]">PT</button> /
-                <button onclick="changeLang('it')" id="btn-it" class="transition-colors hover:text-[var(--text-accent)]">IT</button>
+            <div class="flex gap-1.5 text-xs md:text-sm font-bold tracking-widest text-gray-500">
+                <button type="button" onclick="changeLang('en')" id="btn-en" class="text-white transition-colors hover:text-[var(--text-accent)]">EN</button>
+                <span>/</span>
+                <button type="button" onclick="changeLang('pt')" id="btn-pt" class="transition-colors hover:text-[var(--text-accent)]">PT</button>
+                <span>/</span>
+                <button type="button" onclick="changeLang('it')" id="btn-it" class="transition-colors hover:text-[var(--text-accent)]">IT</button>
             </div>
-            <a href="#contact" data-i18n="nav_contact" class="hidden md:block text-sm font-bold uppercase tracking-widest hover:text-[var(--text-accent)] transition-colors">Contact</a>
+
+            <div class="hidden lg:flex gap-6 items-center text-xs font-bold uppercase tracking-widest text-gray-300">
+                <a href="#works" data-i18n="nav_works" class="hover:text-[var(--text-accent)] transition-colors">Works</a>
+                <a href="#experience" data-i18n="nav_exp" class="hover:text-[var(--text-accent)] transition-colors">Experience</a>
+                <a href="#skills" data-i18n="nav_skills" class="hover:text-[var(--text-accent)] transition-colors">Skills</a>
+                <a href="#contact" data-i18n="nav_contact" class="hover:text-[var(--text-accent)] transition-colors">Contact</a>
+            </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-6 md:px-8 content-layer" id="main-container">
+    <main class="max-w-7xl mx-auto px-5 md:px-8 content-layer" id="main-container">
         
         <!-- SECTION 1: HERO -->
         <section id="hero" class="flex flex-col justify-center">
-            <h2 data-i18n="hero_role" class="font-bold mb-4 tracking-widest uppercase text-[var(--text-accent)]" style="transition: color 1s">Game Designer & Developer</h2>
-            <h1 class="text-[12vw] md:text-[9vw] font-extrabold leading-[0.8] tracking-tighter mb-8">
+            <h2 data-i18n="hero_role" class="font-bold mb-4 tracking-widest uppercase text-[var(--text-accent)] text-xs md:text-sm" style="transition: color 1s">Game Designer & Developer</h2>
+            <h1 class="text-[13vw] md:text-[9vw] font-extrabold leading-[0.82] tracking-tighter mb-8">
                 GABRIEL <br>REBELLO
             </h1>
-            <p data-i18n="hero_desc" class="max-w-2xl text-lg md:text-xl leading-relaxed glass-panel p-6 md:p-8 text-gray-200">
+            <p data-i18n="hero_desc" class="max-w-2xl text-base md:text-xl leading-relaxed glass-panel p-6 md:p-8 text-gray-200">
                 A dependable, curious, and communicative Game Design graduate from Belas Artes. Motivated to learn and seeking collaborative roles that challenge my creativity, specializing in bridging systemic mechanics with psychological narrative.
             </p>
+            <div class="mt-8 flex flex-wrap gap-4">
+                <a href="#works" class="px-6 py-3 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider bg-white text-black hover:bg-[var(--text-accent)] hover:text-white transition-all">
+                    Explore Selected Works ↓
+                </a>
+                <a href="#contact" class="px-6 py-3 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider border border-white/20 hover:border-[var(--text-accent)] transition-all">
+                    Get in Touch
+                </a>
+            </div>
         </section>
 
         <!-- SECTION 2: SELECTED WORKS -->
-        <section id="works" class="flex flex-col justify-center relative pt-20 md:pt-32">
-            <h3 class="text-4xl font-bold mb-12 flex items-center">
-                <span class="w-12 h-[2px] bg-[var(--text-accent)] mr-4" style="transition: background 1s"></span> 
-                <span data-i18n="works_title">Selected Works</span>
-            </h3>
+        <section id="works" class="flex flex-col justify-center relative pt-20 md:pt-28">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+                <h3 class="text-3xl md:text-4xl font-bold flex items-center">
+                    <span class="w-10 md:w-12 h-[2px] bg-[var(--text-accent)] mr-4" style="transition: background 1s"></span> 
+                    <span data-i18n="works_title">Selected Works</span>
+                </h3>
+                <p id="works-hint" class="text-xs uppercase tracking-widest text-gray-400">
+                    Hover on PC for side bubble • Tap on Phone to pop bubble under text
+                </p>
+            </div>
 
-            <!-- Grid container. W-2/3 leaves space for bubble ONLY on desktop -->
-            <div class="w-full md:w-2/3 flex flex-col md:pr-12">
+            <!-- Grid container: W-2/3 leaves space for side bubble on desktop -->
+            <div id="works-list" class="w-full md:w-2/3 flex flex-col md:pr-12">
                 
-                <!-- Project: YPORU (Fully Accessible) -->
-                <div class="project-row py-8" tabindex="0" aria-expanded="false"
-                     onmouseenter="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4')" 
-                     onmouseleave="vacuumBubble(this)"
-                     onfocus="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'); this.setAttribute('aria-expanded', 'true')"
-                     onblur="vacuumBubble(this); this.setAttribute('aria-expanded', 'false')">
+                <!-- Project 1: YPORU -->
+                <!-- Seek to #t=15 so TearsOfSteel skips its 14-second black intro screen and plays bright footage immediately -->
+                <div class="project-row py-7 md:py-8" tabindex="0" role="button" aria-expanded="false"
+                     data-video="https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+                     data-start="15">
                     
                     <div class="flex items-start group relative md:pr-10">
-                        <div class="minus-icon hidden md:block text-5xl mr-8 font-light text-[var(--text-accent)] transition-transform duration-500 origin-center mt-[-10px]">-</div>
+                        <div class="minus-icon text-3xl md:text-5xl mr-4 md:mr-8 font-light text-[var(--text-accent)] transition-transform duration-500 origin-center mt-[-4px] md:mt-[-10px] select-none">+</div>
                         <div class="w-full">
-                            <h4 class="text-3xl md:text-4xl font-bold transition-transform duration-500 group-hover:translate-x-2">Yporu</h4>
+                            <div class="flex items-center justify-between">
+                                <h4 class="project-title text-2xl md:text-4xl font-bold transition-transform duration-500 group-hover:translate-x-2">Yporu</h4>
+                                <span class="text-[11px] uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-400">2D Strategy</span>
+                            </div>
                             <p data-i18n="p1_sub" class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Mythological Strategy & Management</p>
                             
                             <div class="accordion-content">
                                 <div class="accordion-inner">
-                                    <p data-i18n="p1_desc" class="text-gray-300 max-w-lg mt-6 mb-4 text-sm leading-relaxed">
+                                    <p data-i18n="p1_desc" class="text-gray-300 max-w-lg mt-5 mb-2 text-sm leading-relaxed">
                                         A 2D strategy game blending tactical board-game combat with village-management mechanics, rooted in Brazilian Indigenous Tupinambá mythology.
                                     </p>
-                                    <!-- Mobile Video Fallback -->
-                                    <video class="mobile-video" src="https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" muted loop playsinline controls></video>
+
+                                    <!-- Mobile Bubble Stage: Pops directly under the text on phones/touch -->
+                                    <div class="mobile-bubble-stage">
+                                        <div class="mobile-bubble-wrap">
+                                            <div class="mobile-bubble-inner">
+                                                <div class="video-loader">
+                                                    <div class="w-7 h-7 border-2 border-white/30 border-t-[var(--text-accent)] rounded-full animate-spin"></div>
+                                                </div>
+                                                <video class="mobile-b-video" muted loop playsinline preload="metadata"></video>
+                                                <button type="button" onclick="toggleMobileBubbleShape(event, this)" class="absolute bottom-3 right-3 z-10 px-2.5 py-1 rounded-full bg-black/70 border border-white/25 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
+                                                    16:9 ⤢
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Project: TERROR IN ATARAXIA -->
-                <div class="project-row py-8" tabindex="0" aria-expanded="false"
-                     onmouseenter="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')" 
-                     onmouseleave="vacuumBubble(this)"
-                     onfocus="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'); this.setAttribute('aria-expanded', 'true')"
-                     onblur="vacuumBubble(this); this.setAttribute('aria-expanded', 'false')">
+                <!-- Project 2: TERROR IN ATARAXIA -->
+                <div class="project-row py-7 md:py-8" tabindex="0" role="button" aria-expanded="false"
+                     data-video="https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+                     data-start="22">
                     
                     <div class="flex items-start group relative md:pr-10">
-                        <div class="minus-icon hidden md:block text-5xl mr-8 font-light text-[var(--text-accent)] transition-transform duration-500 origin-center mt-[-10px]">-</div>
+                        <div class="minus-icon text-3xl md:text-5xl mr-4 md:mr-8 font-light text-[var(--text-accent)] transition-transform duration-500 origin-center mt-[-4px] md:mt-[-10px] select-none">+</div>
                         <div class="w-full">
-                            <h4 class="text-3xl md:text-4xl font-bold transition-transform duration-500 group-hover:translate-x-2">Terror in Ataraxia</h4>
+                            <div class="flex items-center justify-between">
+                                <h4 class="project-title text-2xl md:text-4xl font-bold transition-transform duration-500 group-hover:translate-x-2">Terror in Ataraxia</h4>
+                                <span class="text-[11px] uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-400">3D Stealth</span>
+                            </div>
                             <p data-i18n="p2_sub" class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Retro-Sci-Fi Stealth</p>
                             
                             <div class="accordion-content">
                                 <div class="accordion-inner">
-                                    <p data-i18n="p2_desc" class="text-gray-300 max-w-lg mt-6 mb-4 text-sm leading-relaxed">
+                                    <p data-i18n="p2_desc" class="text-gray-300 max-w-lg mt-5 mb-2 text-sm leading-relaxed">
                                         A 3D stealth game that flips the script: You are the monster. Inspired by 1950s sci-fi cinema, featuring a striking black-and-white visual style.
                                     </p>
-                                    <video class="mobile-video" src="https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" muted loop playsinline controls></video>
+
+                                    <!-- Mobile Bubble Stage -->
+                                    <div class="mobile-bubble-stage">
+                                        <div class="mobile-bubble-wrap">
+                                            <div class="mobile-bubble-inner">
+                                                <div class="video-loader">
+                                                    <div class="w-7 h-7 border-2 border-white/30 border-t-[var(--text-accent)] rounded-full animate-spin"></div>
+                                                </div>
+                                                <video class="mobile-b-video" muted loop playsinline preload="metadata"></video>
+                                                <button type="button" onclick="toggleMobileBubbleShape(event, this)" class="absolute bottom-3 right-3 z-10 px-2.5 py-1 rounded-full bg-black/70 border border-white/25 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
+                                                    16:9 ⤢
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Project: BENEATH US -->
-                <div class="project-row py-8" tabindex="0" aria-expanded="false"
-                     onmouseenter="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4')" 
-                     onmouseleave="vacuumBubble(this)"
-                     onfocus="ejectBubble(this, 'https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'); this.setAttribute('aria-expanded', 'true')"
-                     onblur="vacuumBubble(this); this.setAttribute('aria-expanded', 'false')">
+                <!-- Project 3: BENEATH US -->
+                <div class="project-row py-7 md:py-8" tabindex="0" role="button" aria-expanded="false"
+                     data-video="https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+                     data-start="55">
                     
                     <div class="flex items-start group relative md:pr-10">
-                        <div class="minus-icon hidden md:block text-5xl mr-8 font-light text-[var(--text-accent)] transition-transform duration-500 origin-center mt-[-10px]">-</div>
+                        <div class="minus-icon text-3xl md:text-5xl mr-4 md:mr-8 font-light text-[var(--text-accent)] transition-transform duration-500 origin-center mt-[-4px] md:mt-[-10px] select-none">+</div>
                         <div class="w-full">
-                            <h4 class="text-3xl md:text-4xl font-bold transition-transform duration-500 group-hover:translate-x-2">Beneath Us</h4>
+                            <div class="flex items-center justify-between">
+                                <h4 class="project-title text-2xl md:text-4xl font-bold transition-transform duration-500 group-hover:translate-x-2">Beneath Us</h4>
+                                <span class="text-[11px] uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-400">Dual-Screen Horror</span>
+                            </div>
                             <p data-i18n="p3_sub" class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mt-2">Multi-Screen Psychological Horror</p>
                             
                             <div class="accordion-content">
                                 <div class="accordion-inner">
-                                    <p data-i18n="p3_desc" class="text-gray-300 max-w-lg mt-6 mb-4 text-sm leading-relaxed">
+                                    <p data-i18n="p3_desc" class="text-gray-300 max-w-lg mt-5 mb-2 text-sm leading-relaxed">
                                         Escape a subterranean laboratory in 1990s São Paulo using a dual-device setup, linking your real-world smartphone as an in-game artifact.
                                     </p>
-                                    <video class="mobile-video" src="https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" muted loop playsinline controls></video>
+
+                                    <!-- Mobile Bubble Stage -->
+                                    <div class="mobile-bubble-stage">
+                                        <div class="mobile-bubble-wrap">
+                                            <div class="mobile-bubble-inner">
+                                                <div class="video-loader">
+                                                    <div class="w-7 h-7 border-2 border-white/30 border-t-[var(--text-accent)] rounded-full animate-spin"></div>
+                                                </div>
+                                                <video class="mobile-b-video" muted loop playsinline preload="metadata"></video>
+                                                <button type="button" onclick="toggleMobileBubbleShape(event, this)" class="absolute bottom-3 right-3 z-10 px-2.5 py-1 rounded-full bg-black/70 border border-white/25 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
+                                                    16:9 ⤢
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -289,7 +493,7 @@
 
         <!-- SECTION 3: EXPERIENCE -->
         <section id="experience" class="flex flex-col justify-center">
-            <h3 data-i18n="exp_title" class="text-4xl font-bold mb-12">Experience & Education</h3>
+            <h3 data-i18n="exp_title" class="text-3xl md:text-4xl font-bold mb-12">Experience & Education</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-5xl">
                 
                 <div class="glass-panel p-8 md:p-10 hover:-translate-y-2 transition-transform duration-500">
@@ -310,17 +514,17 @@
 
         <!-- SECTION 4: SKILLS & CONTACT -->
         <section id="skills" class="flex flex-col justify-center min-h-[100vh]">
-            <h3 data-i18n="skills_title" class="text-4xl font-bold mb-12">Arsenal & Mastery</h3>
+            <h3 data-i18n="skills_title" class="text-3xl md:text-4xl font-bold mb-12">Arsenal & Mastery</h3>
             <div class="flex flex-wrap gap-4 md:gap-6 max-w-4xl mb-24 md:mb-32">
-                <div tabindex="0" class="skill-pill glass-panel px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg cursor-none border border-transparent">
+                <div tabindex="0" role="button" onclick="toggleSkillPill(this)" class="skill-pill glass-panel px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg border border-transparent">
                     Unity & Unreal Engine
                     <div data-i18n="skill_1" class="skill-desc">Hands-on experience developing both academic and personal projects utilizing these core engines.</div>
                 </div>
-                <div tabindex="0" class="skill-pill glass-panel px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg cursor-none border border-transparent">
+                <div tabindex="0" role="button" onclick="toggleSkillPill(this)" class="skill-pill glass-panel px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg border border-transparent">
                     Level & Game Design
                     <div data-i18n="skill_2" class="skill-desc">Specialized in 2D and 3D level design, gameplay-first prototyping, and rapid iteration.</div>
                 </div>
-                <div tabindex="0" class="skill-pill glass-panel px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg cursor-none border border-transparent">
+                <div tabindex="0" role="button" onclick="toggleSkillPill(this)" class="skill-pill glass-panel px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg border border-transparent">
                     Video Editing
                     <div data-i18n="skill_3" class="skill-desc">Highly skilled in DaVinci Resolve and Adobe Premiere Pro, backed by formal filmmaking studies in London.</div>
                 </div>
@@ -330,10 +534,9 @@
             <div id="contact" class="border-t border-white/10 pt-16 grid grid-cols-1 md:grid-cols-3 gap-12">
                 <div>
                     <h4 data-i18n="contact_title" class="font-bold text-2xl mb-4 text-[var(--text-accent)]">Contact</h4>
-                    <!-- Functional Mailto link -->
                     <a href="mailto:gabrielnocrebello@gmail.com" class="block text-gray-400 hover:text-white transition-colors">gabrielnocrebello@gmail.com ↗</a>
-                    <p class="text-gray-400 mt-2">(+55) 11 959001806</p>
-                    <a href="https://www.linkedin.com/in/gabriel-nocito-rebello" target="_blank" class="block mt-6 font-bold text-white hover:text-[var(--glow-1)] transition-colors">LinkedIn Profile ↗</a>
+                    <a href="tel:+5511959001806" class="block text-gray-400 mt-2 hover:text-white transition-colors">(+55) 11 959001806</a>
+                    <a href="https://www.linkedin.com/in/gabriel-nocito-rebello" target="_blank" rel="noopener noreferrer" class="inline-block mt-6 font-bold text-white hover:text-[var(--glow-1)] transition-colors">LinkedIn Profile ↗</a>
                 </div>
                 <div>
                     <h4 data-i18n="edu_title" class="font-bold text-2xl mb-4 text-[var(--text-accent)]">Education & Setup</h4>
@@ -360,7 +563,8 @@
         // --- 1. TRANSLATION ENGINE ---
         const i18n = {
             en: {
-                nav_contact: "Contact", hero_role: "Game Designer & Developer",
+                nav_works: "Works", nav_exp: "Experience", nav_skills: "Skills", nav_contact: "Contact",
+                hero_role: "Game Designer & Developer",
                 hero_desc: "A dependable, curious, and communicative Game Design graduate from Belas Artes. Motivated to learn and seeking collaborative roles that challenge my creativity, specializing in bridging systemic mechanics with psychological narrative.",
                 works_title: "Selected Works", p1_sub: "Mythological Strategy & Management",
                 p1_desc: "A 2D strategy game blending tactical board-game combat with village-management mechanics, rooted in Brazilian Indigenous Tupinambá mythology.",
@@ -376,7 +580,8 @@
                 lang_title: "Languages", lang_pt: "Portuguese:", lang_en: "English:", lang_it: "Italian:", lang_de: "German:"
             },
             pt: {
-                nav_contact: "Contato", hero_role: "Game Designer & Desenvolvedor",
+                nav_works: "Projetos", nav_exp: "Experiência", nav_skills: "Habilidades", nav_contact: "Contato",
+                hero_role: "Game Designer & Desenvolvedor",
                 hero_desc: "Recém-formado em Game Design pela Belas Artes, sou confiável, curioso e comunicativo. Motivado a aprender e em busca de papéis colaborativos que desafiem minha criatividade, conectando mecânicas sistêmicas com narrativas psicológicas.",
                 works_title: "Projetos Selecionados", p1_sub: "Estratégia Mitológica & Gestão",
                 p1_desc: "Um jogo de estratégia 2D que mistura combate tático em tabuleiro com gestão de aldeia, enraizado na mitologia indígena brasileira Tupinambá.",
@@ -392,13 +597,14 @@
                 lang_title: "Idiomas", lang_pt: "Português:", lang_en: "Inglês:", lang_it: "Italiano:", lang_de: "Alemão:"
             },
             it: {
-                nav_contact: "Contatto", hero_role: "Game Designer & Sviluppatore",
+                nav_works: "Opere", nav_exp: "Esperienza", nav_skills: "Competenze", nav_contact: "Contatto",
+                hero_role: "Game Designer & Sviluppatore",
                 hero_desc: "Neolaureato in Game Design alla Belas Artes, affidabile, curioso e comunicativo. Motivato a imparare e alla ricerca di ruoli collaborativi, specializzato nel collegare meccaniche di sistema con narrativa psicologica.",
                 works_title: "Opere Selezionate", p1_sub: "Strategia Mitologica e Gestione",
                 p1_desc: "Un gioco di strategia 2D che fonde combattimento tattico con la gestione del villaggio, radicato nella mitologia indigena brasiliana Tupinambá.",
                 p2_sub: "Stealth Retro-Fantascienza", p2_desc: "Un gioco stealth 3D che capovolge la storia: Tu sei il mostro. Ispirato al cinema sci-fi degli anni '50, con un sorprendente stile visivo in bianco e nero.",
                 p3_sub: "Horror Psicologico Multi-Schermo", p3_desc: "Fuggi da un laboratorio sotterraneo nella San Paolo degli anni '90 usando un sistema a doppio dispositivo, collegando il tuo smartphone come artefatto.",
-                exp_title: "Esperienza & Istruzione", exp_1_role: "Stagista in Tecnologia Creativa", exp_1_date: "Esperienza Professionale",
+                exp_title: "Esperienza & Istruzione", exp_1_role: "Stagista in Tecnologia Criativa", exp_1_date: "Esperienza Professionale",
                 exp_1_desc: "Ha guidato iniziative di apprendimento interattivo progettando lezioni di programmazione tramite Minecraft e Scratch. Ha gestito eventi tecnologici e coordinamento TEDx.",
                 exp_2_role: "Studi Globali e Volontariato", exp_2_loc: "Londra / Roma / Germania", exp_2_date: "Sviluppo Internazionale",
                 exp_2_desc: "Ampliamento delle prospettive culturali e tecniche attraverso corsi internazionali intensivi (Cinema, Marketing, Lingua) e volontariato.",
@@ -412,12 +618,11 @@
         function changeLang(lang) {
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
-                if(i18n[lang][key]) el.innerText = i18n[lang][key];
+                if (i18n[lang] && i18n[lang][key]) el.innerText = i18n[lang][key];
             });
-            // Update UI styles for active language
             ['en', 'pt', 'it'].forEach(l => {
                 const btn = document.getElementById(`btn-${l}`);
-                if(l === lang) {
+                if (l === lang) {
                     btn.classList.add('text-white');
                     btn.classList.remove('text-gray-500');
                 } else {
@@ -432,26 +637,57 @@
 
         const cursor = document.getElementById('cursor');
         const glow = document.getElementById('interactive-glow');
-        const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
-        
+        let uxMode = 'auto'; // 'auto' | 'mobile' | 'desktop'
+
+        function isMobileExperience() {
+            if (uxMode === 'mobile') return true;
+            if (uxMode === 'desktop') return false;
+            return window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768;
+        }
+
+        function toggleUxMode() {
+            const label = document.getElementById('ux-mode-label');
+            forceHideDesktopBubble();
+            closeAllMobileRows();
+
+            if (uxMode === 'auto') {
+                uxMode = 'mobile';
+                document.body.classList.add('force-mobile-ux');
+                label.innerText = 'UX: Phone Bubble';
+                // Automatically pop open Yporu so the user immediately sees the phone bubble under text
+                const firstRow = document.querySelector('.project-row');
+                if (firstRow) toggleMobileRow(firstRow, true);
+            } else if (uxMode === 'mobile') {
+                uxMode = 'desktop';
+                document.body.classList.remove('force-mobile-ux');
+                label.innerText = 'UX: PC Side Bubble';
+            } else {
+                uxMode = 'auto';
+                document.body.classList.remove('force-mobile-ux');
+                label.innerText = 'UX: Auto';
+            }
+        }
+
         let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
         let glowX = mouseX, glowY = mouseY;
-        let reqAnimFrame;
 
-        if(!isTouchDevice) {
-            window.addEventListener('mousemove', e => {
-                mouseX = e.clientX; mouseY = e.clientY;
-                gsap.to(cursor, { x: mouseX, y: mouseY, duration: 0.1 });
-            });
+        window.addEventListener('mousemove', e => {
+            if (isMobileExperience()) return;
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            gsap.to(cursor, { x: mouseX, y: mouseY, duration: 0.1, overwrite: 'auto' });
+        });
 
-            function animateGlow() {
-                glowX += (mouseX - glowX) * 0.04;
-                glowY += (mouseY - glowY) * 0.04;
-                glow.style.left = `${glowX}px`; glow.style.top = `${glowY}px`;
-                reqAnimFrame = requestAnimationFrame(animateGlow);
+        function animateGlow() {
+            if (!isMobileExperience()) {
+                glowX += (mouseX - glowX) * 0.05;
+                glowY += (mouseY - glowY) * 0.05;
+                glow.style.left = `${glowX}px`;
+                glow.style.top = `${glowY}px`;
             }
-            animateGlow();
+            requestAnimationFrame(animateGlow);
         }
+        animateGlow();
 
         const journeySteps = [
             { id: '#hero', base: '#120400', glow1: '#ff5e00', glow2: '#ff0055', text: '#ff8c42' },
@@ -463,7 +699,8 @@
         journeySteps.forEach((step) => {
             ScrollTrigger.create({
                 trigger: step.id,
-                start: "top 50%", end: "bottom 50%",
+                start: "top 55%",
+                end: "bottom 45%",
                 onEnter: () => updateColors(step),
                 onEnterBack: () => updateColors(step)
             });
@@ -471,100 +708,329 @@
 
         function updateColors(step) {
             gsap.to(document.documentElement, {
-                '--bg-base': step.base, '--glow-1': step.glow1, '--glow-2': step.glow2, '--text-accent': step.text,
-                duration: 1.5, ease: "power2.out"
+                '--bg-base': step.base,
+                '--glow-1': step.glow1,
+                '--glow-2': step.glow2,
+                '--text-accent': step.text,
+                duration: 1.2,
+                ease: "power2.out"
             });
         }
 
-        // --- 3. PHYSICS BUBBLE ENGINE (A11Y & ULTRA-WIDE SAFE) ---
+        // --- 3. UNIFIED BUBBLE ENGINE (PC SIDE EJECT + PHONE UNDER-TEXT POP) ---
         const bWrap = document.getElementById('b-wrap');
         const bInner = document.getElementById('b-inner');
         const bVideo = document.getElementById('b-video');
+        const desktopLoader = document.getElementById('desktop-video-loader');
         const mainContainer = document.getElementById('main-container');
-        let floatTween;
+        
+        let floatTween = null;
+        let pauseTimeout = null;
+        let activeDesktopRow = null;
+        let currentVideoUrl = '';
 
-        function ejectBubble(el, videoUrl) {
-            if(isTouchDevice) return; // Prevent heavy JS logic on mobile entirely
+        // Hide desktop spinner as soon as video frames render
+        bVideo.addEventListener('playing', () => desktopLoader.classList.add('is-hidden'));
+        bVideo.addEventListener('loadeddata', () => desktopLoader.classList.add('is-hidden'));
 
-            const minusIcon = el.querySelector('.minus-icon');
-            const rect = minusIcon.getBoundingClientRect();
-            
-            if (bVideo.src !== videoUrl) {
-                bVideo.src = videoUrl;
-                bVideo.load(); 
+        function safePlayVideo(videoEl, videoUrl, startTimeSec, loaderEl) {
+            const targetSrc = `${videoUrl}#t=${startTimeSec || 15}`;
+            if (videoEl.getAttribute('data-loaded-src') !== targetSrc) {
+                if (loaderEl) loaderEl.classList.remove('is-hidden');
+                videoEl.setAttribute('data-loaded-src', targetSrc);
+                videoEl.src = targetSrc;
+                videoEl.load();
             }
-            
-            const playPromise = bVideo.play();
+
+            const onCanPlay = () => {
+                if (loaderEl) loaderEl.classList.add('is-hidden');
+                if (videoEl.currentTime < (startTimeSec || 15) - 1) {
+                    try { videoEl.currentTime = Number(startTimeSec || 15); } catch (e) {}
+                }
+            };
+            videoEl.addEventListener('loadedmetadata', onCanPlay, { once: true });
+
+            const playPromise = videoEl.play();
             if (playPromise !== undefined) {
-                playPromise.catch(error => console.warn("Auto-play prevented", error));
+                playPromise.then(() => {
+                    if (loaderEl) loaderEl.classList.add('is-hidden');
+                }).catch(err => {
+                    // Ignore AbortError when user rapidly switches projects
+                    if (err.name !== 'AbortError') {
+                        console.warn('Video playback notice:', err.message);
+                    }
+                });
             }
-            
-            gsap.to(minusIcon, { rotation: 90, color: '#ffffff', duration: 0.5, ease: "back.out(2)" });
-            
-            // Ultra-wide monitor fix: Get bounds of the <main> container to anchor the bubble
+        }
+
+        function computeDesktopBubbleCoords(el) {
             const mainRect = mainContainer.getBoundingClientRect();
-            // Target right side of the main container, preventing it from flying into off-screen void
-            const targetX = Math.min(mainRect.right - 250, window.innerWidth - 300);
-            const targetY = el.getBoundingClientRect().top + (el.getBoundingClientRect().height / 2) - 190;
+            const rowRect = el.getBoundingClientRect();
+            const targetX = Math.max(320, Math.min(mainRect.right - 360, window.innerWidth - 390));
+            const targetY = Math.max(90, Math.min(rowRect.top + (rowRect.height / 2) - 180, window.innerHeight - 390));
+            return { targetX, targetY };
+        }
+
+        function getOriginRect(el) {
+            const minusIcon = el.querySelector('.minus-icon');
+            const titleEl = el.querySelector('.project-title');
+            const rect = minusIcon ? minusIcon.getBoundingClientRect() : { width: 0 };
+            if (rect.width > 0 && rect.height > 0) return rect;
+            return titleEl.getBoundingClientRect();
+        }
+
+        function ejectDesktopBubble(el) {
+            if (isMobileExperience()) return;
+            if (activeDesktopRow === el) return; // Avoid double trigger on focus + mouseenter
+            activeDesktopRow = el;
+
+            // Cancel any pending pause timeout from previous row leave!
+            if (pauseTimeout) {
+                clearTimeout(pauseTimeout);
+                pauseTimeout = null;
+            }
+
+            const videoUrl = el.getAttribute('data-video');
+            const startTime = Number(el.getAttribute('data-start') || 15);
+            const minusIcon = el.querySelector('.minus-icon');
+            const originRect = getOriginRect(el);
+
+            safePlayVideo(bVideo, videoUrl, startTime, desktopLoader);
+
+            if (minusIcon) {
+                gsap.to(minusIcon, { rotation: 135, color: '#ffffff', duration: 0.45, ease: "back.out(2)" });
+            }
+
+            const { targetX, targetY } = computeDesktopBubbleCoords(el);
 
             gsap.killTweensOf(bWrap);
             if (floatTween) floatTween.kill();
 
-            gsap.set(bWrap, { x: rect.left, y: rect.top, scale: 0.1, opacity: 0 });
+            // If bubble is currently hidden, eject from the icon; if already open, glide smoothly between rows
+            const currentOpacity = parseFloat(gsap.getProperty(bWrap, "opacity")) || 0;
+            if (currentOpacity < 0.15) {
+                gsap.set(bWrap, { x: originRect.left, y: originRect.top, scale: 0.1, opacity: 0 });
+            }
 
             gsap.to(bWrap, {
-                x: targetX, y: targetY, scale: 1, opacity: 1,
-                duration: 0.8, ease: "back.out(1.4)"
+                x: targetX,
+                y: targetY,
+                scale: 1,
+                opacity: 1,
+                duration: 0.75,
+                ease: "back.out(1.4)"
             });
 
             gsap.set(bInner, { y: 0 });
             floatTween = gsap.to(bInner, {
-                y: -25, rotation: 3, duration: 2.5, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.2
+                y: -22,
+                rotation: 3,
+                duration: 2.4,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut",
+                delay: 0.15
             });
         }
 
-        function vacuumBubble(el) {
-            if(isTouchDevice) return;
+        function vacuumDesktopBubble(el) {
+            if (isMobileExperience()) return;
+            if (activeDesktopRow === el) activeDesktopRow = null;
+
             const minusIcon = el.querySelector('.minus-icon');
-            const rect = minusIcon.getBoundingClientRect();
-            
-            gsap.to(minusIcon, { rotation: 0, color: 'var(--text-accent)', duration: 0.4 });
+            const originRect = getOriginRect(el);
+
+            if (minusIcon) {
+                gsap.to(minusIcon, { rotation: 0, color: 'var(--text-accent)', duration: 0.4 });
+            }
 
             if (floatTween) floatTween.kill();
-            gsap.to(bInner, { y: 0, rotation: 0, duration: 0.4 });
+            gsap.to(bInner, { y: 0, rotation: 0, duration: 0.35 });
 
             gsap.to(bWrap, {
-                x: rect.left, y: rect.top, scale: 0, opacity: 0,
-                duration: 0.5, ease: "power4.in" 
+                x: originRect.left,
+                y: originRect.top,
+                scale: 0,
+                opacity: 0,
+                duration: 0.45,
+                ease: "power3.in"
             });
-            setTimeout(() => { if (bWrap.style.opacity == 0) bVideo.pause(); }, 500);
+
+            if (pauseTimeout) clearTimeout(pauseTimeout);
+            pauseTimeout = setTimeout(() => {
+                if (!activeDesktopRow) {
+                    bVideo.pause();
+                }
+            }, 460);
         }
+
+        // Keep desktop bubble aligned with active row when scrolling
+        window.addEventListener('scroll', () => {
+            if (activeDesktopRow && !isMobileExperience()) {
+                const { targetX, targetY } = computeDesktopBubbleCoords(activeDesktopRow);
+                gsap.to(bWrap, { x: targetX, y: targetY, duration: 0.25, overwrite: 'auto' });
+            }
+        }, { passive: true });
+
+        // --- 4. MOBILE UNDER-TEXT BUBBLE POP ENGINE ---
+        function closeAllMobileRows(exceptRow = null) {
+            document.querySelectorAll('.project-row').forEach(row => {
+                if (row === exceptRow) return;
+                row.classList.remove('is-open');
+                row.setAttribute('aria-expanded', 'false');
+                const icon = row.querySelector('.minus-icon');
+                const mWrap = row.querySelector('.mobile-bubble-wrap');
+                const mInner = row.querySelector('.mobile-bubble-inner');
+                const mVideo = row.querySelector('.mobile-b-video');
+
+                if (icon) gsap.to(icon, { rotation: 0, color: 'var(--text-accent)', duration: 0.35 });
+                if (mInner) gsap.killTweensOf(mInner);
+                if (mWrap) {
+                    gsap.killTweensOf(mWrap);
+                    gsap.to(mWrap, {
+                        scale: 0,
+                        opacity: 0,
+                        y: -16,
+                        duration: 0.35,
+                        ease: "power2.in"
+                    });
+                }
+                if (mVideo) mVideo.pause();
+            });
+        }
+
+        function toggleMobileRow(row, forceOpen = false) {
+            const isOpen = row.classList.contains('is-open');
+            const shouldOpen = forceOpen ? true : !isOpen;
+
+            closeAllMobileRows(shouldOpen ? row : null);
+
+            const icon = row.querySelector('.minus-icon');
+            const mWrap = row.querySelector('.mobile-bubble-wrap');
+            const mInner = row.querySelector('.mobile-bubble-inner');
+            const mVideo = row.querySelector('.mobile-b-video');
+            const mLoader = row.querySelector('.video-loader');
+            const videoUrl = row.getAttribute('data-video');
+            const startTime = Number(row.getAttribute('data-start') || 15);
+
+            if (shouldOpen) {
+                row.classList.add('is-open');
+                row.setAttribute('aria-expanded', 'true');
+                if (icon) gsap.to(icon, { rotation: 135, color: '#ffffff', duration: 0.45, ease: "back.out(2)" });
+
+                if (mVideo) {
+                    mVideo.addEventListener('playing', () => mLoader && mLoader.classList.add('is-hidden'), { once: true });
+                    mVideo.addEventListener('loadeddata', () => mLoader && mLoader.classList.add('is-hidden'), { once: true });
+                    safePlayVideo(mVideo, videoUrl, startTime, mLoader);
+                }
+
+                // Pop the bubble right under the project text with spring physics
+                if (mWrap && mInner) {
+                    gsap.killTweensOf(mWrap);
+                    gsap.killTweensOf(mInner);
+                    gsap.fromTo(mWrap,
+                        { scale: 0.15, opacity: 0, y: -24 },
+                        { scale: 1, opacity: 1, y: 0, duration: 0.65, delay: 0.08, ease: "back.out(1.55)" }
+                    );
+                    gsap.fromTo(mInner,
+                        { y: 0, rotation: -1.5 },
+                        { y: -8, rotation: 1.5, duration: 2.2, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.3 }
+                    );
+                }
+            } else {
+                closeAllMobileRows(null);
+            }
+        }
+
+        function toggleMobileBubbleShape(event, btnEl) {
+            event.stopPropagation();
+            const wrap = btnEl.closest('.mobile-bubble-wrap');
+            if (!wrap) return;
+            wrap.classList.toggle('is-expanded');
+            btnEl.innerText = wrap.classList.contains('is-expanded') ? 'Bubble ◯' : '16:9 ⤢';
+        }
+
+        function toggleSkillPill(pillEl) {
+            const wasActive = pillEl.classList.contains('is-active');
+            document.querySelectorAll('.skill-pill').forEach(p => p.classList.remove('is-active'));
+            if (!wasActive) pillEl.classList.add('is-active');
+        }
+
+        // Attach event listeners cleanly to each project row
+        document.querySelectorAll('.project-row').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                if (!isMobileExperience()) ejectDesktopBubble(row);
+            });
+            row.addEventListener('mouseleave', () => {
+                if (!isMobileExperience()) vacuumDesktopBubble(row);
+            });
+            row.addEventListener('focus', () => {
+                if (!isMobileExperience()) {
+                    row.setAttribute('aria-expanded', 'true');
+                    ejectDesktopBubble(row);
+                }
+            });
+            row.addEventListener('blur', () => {
+                if (!isMobileExperience()) {
+                    row.setAttribute('aria-expanded', 'false');
+                    vacuumDesktopBubble(row);
+                }
+            });
+            row.addEventListener('click', (e) => {
+                if (isMobileExperience()) {
+                    toggleMobileRow(row);
+                }
+            });
+            row.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (isMobileExperience()) {
+                        toggleMobileRow(row);
+                    } else {
+                        ejectDesktopBubble(row);
+                    }
+                }
+            });
+        });
 
         ScrollTrigger.create({
             trigger: "#works",
-            start: "top bottom", end: "bottom top",
-            onLeave: forceHideBubble, onLeaveBack: forceHideBubble
+            start: "top bottom",
+            end: "bottom top",
+            onLeave: forceHideDesktopBubble,
+            onLeaveBack: forceHideDesktopBubble
         });
 
-        function forceHideBubble() {
-            if(isTouchDevice) return;
+        function forceHideDesktopBubble() {
+            activeDesktopRow = null;
             gsap.killTweensOf(bWrap);
             if (floatTween) floatTween.kill();
             gsap.to(bWrap, { scale: 0, opacity: 0, duration: 0.3 });
             bVideo.pause();
-            gsap.to('.minus-icon', { rotation: 0, color: 'var(--text-accent)', duration: 0.3 });
+            if (!isMobileExperience()) {
+                gsap.to('.minus-icon', { rotation: 0, color: 'var(--text-accent)', duration: 0.3 });
+            }
         }
 
-        if(!isTouchDevice) {
-            document.querySelectorAll('a, button, .project-row, .skill-pill').forEach(item => {
-                item.addEventListener('mouseenter', () => {
-                    gsap.to(cursor, { scale: 3, background: 'transparent', border: '1px solid white', duration: 0.3 });
-                });
-                item.addEventListener('mouseleave', () => {
-                    gsap.to(cursor, { scale: 1, background: 'white', border: 'none', duration: 0.3 });
-                });
+        // Custom cursor hover expansion on desktop
+        document.querySelectorAll('a, button, .project-row, .skill-pill').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                if (isMobileExperience()) return;
+                gsap.to(cursor, { scale: 3, background: 'transparent', border: '1px solid white', duration: 0.3 });
             });
-        }
+            item.addEventListener('mouseleave', () => {
+                if (isMobileExperience()) return;
+                gsap.to(cursor, { scale: 1, background: 'white', border: 'none', duration: 0.3 });
+            });
+        });
+
+        // Auto-open the first project bubble on mobile devices so visitors immediately see the interactive bubble
+        window.addEventListener('DOMContentLoaded', () => {
+            if (isMobileExperience()) {
+                const firstRow = document.querySelector('.project-row');
+                if (firstRow) toggleMobileRow(firstRow, true);
+            }
+        });
     </script>
 </body>
 </html>
